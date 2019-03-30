@@ -15,13 +15,15 @@
         <h1>BU-MGMT</h1>
     </div>
     <div class="card">
-        <h2> Properties </h2>
-        <div class="actions" >create invite</div>
-        <div class="actions" >create course</div>
-        <div class="actions" >assign students to course</div>
-        <div class="actions" >assign students to batch</div>
-        <div class="actions" >assign student representatives</div>
-        <div class="actions" >create batch</div>
+        <h2> create Course </h2>
+        <form action="invite_submit" method="post">
+            <h3>Course Name</h3>
+            <input type="text" name="Channel Name" id="name">
+            <h3>Course ID</h3>
+            <input type="text" name="Channel ID" id="id">
+            <br>
+            <input type="button" value="submit">
+        </form>
     </div>
 </body>
 <script src="../static/js/"></script>
