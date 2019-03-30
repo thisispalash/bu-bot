@@ -3,6 +3,10 @@ import os, datetime
 import discord
 from discord.ext import commands
 
+from .helper import STUD_FILE, SERVER_INFO
+
+SERVER = {}
+
 prefix = '>'
 
 bot = commands.Bot(command_prefix=prefix)
@@ -30,7 +34,14 @@ async def on_message(msg):
   elif ctx.command: await ctx.invoke(ctx.command)
   else: pass
 
+@bot.event
+async def on_member_join(mem):
+  global SERVER
+  with open(SERVER_INFO) as f: SERVER = json.load(f)
+
+
 ''' Commands '''
+
 @bot.command(pass_context=True)
 async def help(ctx, *args):
   if len(args)!=0: await ctx.message.channel.send('Usage: `>help` ')
@@ -58,10 +69,12 @@ async def reply(ctx, *args):
     await ctx.message.channel.send('I do not have access to the message being referred to!')
   await ctx.message.channel.send(embed=em)
 
+
 ''' Helpers '''
+
 def create_embed(reply_to, reply):
   em = discord.Embed()
-  em.title = ':point_down: {0.author.display_name}\'s message is a reply to {1.author.display_name} :point_up_2:'.format(reply,reply_to)
+  em.title = ':point_up_2: {0.author.display_name}\'s message is a reply to {1.author.display_name} :point_down:'.format(reply,reply_to)
   em.description = '{0.clean_content}'.format(reply_to)
   em.color = 0x44BFC1
   em.timestamp = reply.created_at
@@ -69,6 +82,9 @@ def create_embed(reply_to, reply):
   em.add_field(name='Reply',value='[{0.created_at}]({0.jump_url})'.format(reply),inline=False)
   em.set_footer(text='Click the links to jump to the messages')
   return em
+
+def create_otp():
+  pass
 
 if __name__=='__main__':
   if not os.environ['BUHACK_GIFT']:
