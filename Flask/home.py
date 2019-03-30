@@ -1,11 +1,23 @@
-from flask import Flask, g, session, redirect, request, url_for, jsonify, render_template
+from flask import Flask, g, session, redirect, request, url_for, jsonify, render_template, flash
 from requests_oauthlib import OAuth2Session
 import globals
 import os
 import pandas as pd
+from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
 
+
+UPLOAD_FOLDER = 'data_files'
+ALLOWED_EXTENSIONS = set(['xlsx'])
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route("/")
 def main():
@@ -49,12 +61,40 @@ def invite():
 
 @app.route("/invite_submit", methods=['POST'])
 def invite_submit():
-    xls = request.form['file']
-    xl_file = pd.ExcelFile(xls)
+    if request.method == 'POST':
+        f = request.files['file']
+    if ".xlsx" not in f.filename or ".xls" not in f.filename:
+        return "Invalid file uploaded"
+    count = len(os.listdir(app.config['UPLOAD_FOLDER']))
+    f.save(os.path.join(app.config['UPLOAD_FOLDER'], str(count)+".xlsx"))
+    xl_file = pd.ExcelFile(app.config["UPLOAD_FOLDER"]+"/{}.xlsx".format(count))
     dfs = pd.read_excel(xl_file, sheet_name=None)
+
     print(dfs)
-        
-    
+
+    return 'file uploaded successfully'
+
+@app.route("/create_course", methods=["POST"])
+def create_course():
+    channel_name = request.form["channel_name"]
+    channel_id = request.form["channel_id"]
+
+    return "Channel Created for {} - {} ".format(channel_name, channel_id)
+
+@app.route("/assign_students", methods=["POST"])
+def assign_students_course():
+    if request.method == 'POST':
+        f = request.files['file']
+    if ".xlsx" not in f.filename or ".xls" not in f.filename:
+        return "Invalid file uploaded"
+    count = len(os.listdir(app.config['UPLOAD_FOLDER']))
+    f.save(os.path.join(app.config['UPLOAD_FOLDER'], str(count)+".xlsx"))
+    xl_file = pd.ExcelFile(app.config["UPLOAD_FOLDER"]+"/{}.xlsx".format(count))
+    dfs = pd.read_excel(xl_file, sheet_name=None)
+
+    print(dfs)
+
+    return 'file uploaded successfully'
 
 
 OAUTH2_CLIENT_ID = globals.OAUTH2_CLIENT_ID
