@@ -2,12 +2,8 @@ from flask import Flask, g, session, redirect, request, url_for, jsonify, render
 from requests_oauthlib import OAuth2Session
 import globals
 import os
-from home import home
-
 
 app = Flask(__name__)
-
-app.register_blueprint(home)
 
 @app.route("/")
 def main():
