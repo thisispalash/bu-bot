@@ -13,3 +13,4 @@ def home():
 	return render_template('home.html', base_url = globals.base_url)
 
 
+
