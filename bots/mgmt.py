@@ -1,34 +1,57 @@
-''' Bot only as an API; to be used by a GUI '''
+''' Bot only as an API '''
 
-import os, json, datetime
+import os, json, datetime, base64
 
 import discord
 from discord.ext import commands
 import asyncio
 
-from helper import STUD_FILE, SERVER_INFO
+from helper import STUD_FILE, CONFIG_FILE, LOG_FILE
 
-prefix = ';'
-bot = commands.Bot(command_prefix=prefix)
-server,data = {},{}
+# TODO Shift to pymongo
+with open(CONFIG_FILE) as f: CONFIG = json.load(f)
+with open(STUD_FILE) as f: DATA = json.load(f)
+
+''' Constants '''
+PREFIX = ';'
+SERVER_NAME = CONFIG['guild']
 WELCOME_CHANNEL = None
+# NO_PERMS = discord.Permissions.none()
+# ALL_PERMS = discord.Permissions.all()
+
+OTPs = []
+
+bot = commands.Bot(command_prefix=PREFIX)
+
 
 ''' Events '''
 
 @bot.event
 async def on_ready():
-  act = discord.Activity()
-  act.type = discord.ActivityType.watching
-  act.name = 'your every move'
-  await bot.change_presence(activity=act)
-  print(bot.guilds)
-  print('Awake')
+  global SERVER_NAME, WELCOME_CHANNEL
+  
+  activity = discord.Activity(
+    type = discord.ActivityType.watching,
+    name = 'your every move'
+  ); await bot.change_presence(activity=activity)
+  
+  for guild in bot.guilds:
+    if guild.name == SERVER_NAME:
+      only_bot = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False)
+      }; pm = None
+      for channel in guild.channels:
+        if channel.name == 'welcome': WELCOME_CHANNEL = channel.id
+        if channel.name == 'bot-chan': pm = channel
+      if not pm: pm = await guild.create_text_channel('bot-chan',overwrites=only_bot)
+      if not pm.topic: pm.topic = 'Channel for BU_MGMT to manage the server. Use the webapp to manipulate bot or type ;help for list of commands'
+      await pm.send('The time of bots is now!')
+
+  print('Beep boop, boop beep!')
 
 @bot.event
 async def on_member_join(mem):
-  global server,data
-  with open(SERVER_INFO) as f: server = json.load(f)
-  with open(STUD_FILE) as f: data = json.load(f)
+  global DATA
   dm = await mem.create_dm() if not mem.dm_channel else mem.dm_channel
   # TODO convert to from_dict()
   em = discord.Embed( 
@@ -82,17 +105,17 @@ async def on_member_join(mem):
       await dm.send('Welcome to the server! You have been assigned the following roles: ' + 
         ', '.join(role.name for role in roles))
       endloop = True
-  data[index] = stud
-  with open(STUD_FILE,'w') as f: json.dump(data,f)
+  DATA[index] = stud
+  with open(STUD_FILE,'w') as f: json.dump(DATA,f)
   if WELCOME_CHANNEL: await dm.send('Head on over to <#{}> to get started!'.format(WELCOME_CHANNEL))
 
 @bot.event
 async def on_message(msg):
-  # if isinstance(msg.channel,discord.DMChannel): pass
-  author = msg.author
-  print(author)
-  print(msg.channel)
-  # print(msg.channel.name)
+  if msg.author != bot.user: pass
+  global LOG_FILE
+  log = '[' + str(datetime.datetime.now()) + '] ' + msg.clean_content 
+  with open(LOG_FILE,'a') as f: f.write(log)
+  await bot.process_commands(msg)
 
 ''' Commands '''
 
@@ -114,18 +137,28 @@ async def add_to_server(ctx, *args):
 
 
 ''' Helper Methods '''
-def get_member(email=''):
+
+def get_member(email):
   if not email: return None,None
   try: email = email[:email.index('@')].lower()
   except ValueError: email = email.lower()
   index = 0
-  for stud in data:
+  for stud in DATA:
     if stud.get('netID') == email: return stud,index
     index+=1
   return None,None
 
+def generate_otp(netID):
+  global OTPs
+  seed = netID + str(datetime.datetime.now())
+  b64 = base64.b64encode(seed.encode())
+  otp = hash(b64)[-6:]
+  while otp in OTPs: otp = hash(b64)[-6:]
+  OTPs.append(otp)
+  return otp
+
+
+
 if __name__ == '__main__':
   if not os.environ.get('BU_MGMT'): exit('token not found')
-
-  bot.self_bot = True # Will only listen for commands called by itself
   bot.run(os.environ['BU_MGMT'])

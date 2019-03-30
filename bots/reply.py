@@ -3,7 +3,7 @@ import os, datetime
 import discord
 from discord.ext import commands
 
-from .helper import STUD_FILE
+from helper import STUD_FILE
 
 SERVER = {}
 
@@ -20,8 +20,7 @@ usage = {
 ''' Events '''
 
 @bot.event
-async def on_ready(ctx):
-  print(ctx)
+async def on_ready():
   print(bot)
   act = discord.Activity()
   act.type = discord.ActivityType.watching
@@ -70,20 +69,18 @@ async def reply(ctx, *args):
 ''' Helpers '''
 
 def create_embed(reply_to, reply):
+  # TODO Rich embeds for images and videos
+    # Use Embed.description for the file?
+  reply_msg = ' '.join(reply.clean_content.split(' ')[1:])
   em = discord.Embed()
   em.title = ':point_up_2: {0.author.display_name}\'s message is a reply to {1.author.display_name} :point_down:'.format(reply,reply_to)
-  em.description = '{0.clean_content}'.format(reply_to)
   em.color = 0x44BFC1
   em.timestamp = reply.created_at
-  em.add_field(name='Original Message',value='[{0.created_at}]({0.jump_url})'.format(reply_to),inline=False)
-  em.add_field(name='Reply',value='[{0.created_at}]({0.jump_url})'.format(reply),inline=False)
+  em.add_field(name='Original Message',value='[{0.clean_content}]({0.jump_url})'.format(reply_to),inline=False)
+  em.add_field(name='Reply',value='[{0}]({1.jump_url})'.format(reply_msg,reply),inline=False)
   em.set_footer(text='Click the links to jump to the messages')
   return em
-
-def create_otp():
-  pass
 
 if __name__=='__main__':
   if not os.environ.get('BUHACK_GIFT'): exit('token not found')
   bot.run(os.environ['BUHACK_GIFT'])
-
