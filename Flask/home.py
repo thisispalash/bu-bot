@@ -4,6 +4,7 @@ import globals
 import os
 import pandas as pd
 from werkzeug.utils import secure_filename
+import json
 
 
 app = Flask(__name__)
@@ -70,7 +71,14 @@ def invite_submit():
     xl_file = pd.ExcelFile(app.config["UPLOAD_FOLDER"]+"/{}.xlsx".format(count))
     dfs = pd.read_excel(xl_file, sheet_name=None)
 
-    print(dfs)
+    json_data = json.dumps({})
+    count = 0
+    for i in dfs.values():
+        json_data += json.dumps({"name": str(i["Name"][count]), "roll": str(i["Roll"][count]), "year": str(i["Year"][count]), "netID": "", "otp": "", "batch": str(i["Batch"][count]), "rep": str(i["Rep"][count]), "courses": "", "email": str(i["Email"][count]), "discord_uid": "", "nickname": "", "enrolled": "True"})
+        count += 1
+
+
+    print(json_data)
 
     return 'file uploaded successfully'
 
@@ -78,7 +86,7 @@ def invite_submit():
 def create_course():
     channel_name = request.form["channel_name"]
     channel_id = request.form["channel_id"]
-
+    print("create course is called")
     return "Channel Created for {} - {} ".format(channel_name, channel_id)
 
 @app.route("/assign_students", methods=["POST"])
@@ -92,10 +100,45 @@ def assign_students_course():
     xl_file = pd.ExcelFile(app.config["UPLOAD_FOLDER"]+"/{}.xlsx".format(count))
     dfs = pd.read_excel(xl_file, sheet_name=None)
 
-    print(dfs)
+    print("assign students course is called")
 
     return 'file uploaded successfully'
 
+@app.route("/assign_students_batch", methods=["POST"])
+def assign_students_batch():
+    if request.method == 'POST':
+        f = request.files['file']
+    if ".xlsx" not in f.filename or ".xls" not in f.filename:
+        return "Invalid file uploaded"
+    count = len(os.listdir(app.config['UPLOAD_FOLDER']))
+    f.save(os.path.join(app.config['UPLOAD_FOLDER'], str(count)+".xlsx"))
+    xl_file = pd.ExcelFile(app.config["UPLOAD_FOLDER"]+"/{}.xlsx".format(count))
+    dfs = pd.read_excel(xl_file, sheet_name=None)
+
+    print("assign students batch is called")
+
+    return 'file uploaded successfully'
+
+@app.route("/assign_student_rep", methods=["POST"])
+def assign_students_rep():
+    if request.method == 'POST':
+        f = request.files['file']
+    if ".xlsx" not in f.filename or ".xls" not in f.filename:
+        return "Invalid file uploaded"
+    count = len(os.listdir(app.config['UPLOAD_FOLDER']))
+    f.save(os.path.join(app.config['UPLOAD_FOLDER'], str(count)+".xlsx"))
+    xl_file = pd.ExcelFile(app.config["UPLOAD_FOLDER"]+"/{}.xlsx".format(count))
+    dfs = pd.read_excel(xl_file, sheet_name=None)
+
+    print("assign students rep is called")
+
+    return 'file uploaded successfully'
+
+@app.route("/create_batch", methods=["POST"])
+def create_batch():
+    batch = request.form['batch']
+    print(batch)
+    return "success !!!! HAHA !!!!"
 
 OAUTH2_CLIENT_ID = globals.OAUTH2_CLIENT_ID
 OAUTH2_CLIENT_SECRET = globals.OAUTH2_CLIENT_SECRET
