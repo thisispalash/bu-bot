@@ -3,3 +3,4 @@ app-env
 inspire.py
 data
 *.pyc
+globals.py
