@@ -3,7 +3,7 @@ import os, datetime
 import discord
 from discord.ext import commands
 
-from .helper import STUD_FILE, SERVER_INFO
+from .helper import STUD_FILE
 
 SERVER = {}
 
@@ -20,7 +20,9 @@ usage = {
 ''' Events '''
 
 @bot.event
-async def on_ready():
+async def on_ready(ctx):
+  print(ctx)
+  print(bot)
   act = discord.Activity()
   act.type = discord.ActivityType.watching
   act.name = 'your messages'
@@ -33,11 +35,6 @@ async def on_message(msg):
   if not ctx.valid and ctx.prefix == prefix: await ctx.invoke(reply)
   elif ctx.command: await ctx.invoke(ctx.command)
   else: pass
-
-@bot.event
-async def on_member_join(mem):
-  global SERVER
-  with open(SERVER_INFO) as f: SERVER = json.load(f)
 
 
 ''' Commands '''
@@ -87,8 +84,6 @@ def create_otp():
   pass
 
 if __name__=='__main__':
-  if not os.environ['BUHACK_GIFT']:
-    print('token not found')
-    exit()
+  if not os.environ.get('BUHACK_GIFT'): exit('token not found')
   bot.run(os.environ['BUHACK_GIFT'])
 

@@ -12,6 +12,6 @@ SERVER_INFO = os.path.join(DATA_DIR,'server'+FILE_EXT)
 if not os.path.isdir(DATA_DIR): 
   os.mkdir(DATA_DIR)
 if not os.path.isfile(STUD_FILE):
-  with open(STUD_FILE,'w') as f: json.dump({},f)
+  with open(STUD_FILE,'w') as f: json.dump([],f)
 if not os.path.isfile(SERVER_INFO):
-  with open(STUD_FILE,'w') as f: json.dump({},f)
+  with open(SERVER_INFO,'w') as f: json.dump([],f)
