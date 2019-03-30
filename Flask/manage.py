@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 from flask import json
 import globals
-from home inport home
+from home import home
 
 app = Flask(__name__)
 
