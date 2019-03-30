@@ -1,12 +1,30 @@
+import os
+
 import discord
+from discord.ext import commands
 
-class MyClient(discord.Client):
-    async def on_ready(self):
-        print('Logged on as {0}!'.format(self.user))
 
-    async def on_message(self, message):
-        print('Message from {0.author}: {0.content}'.format(message))
+''' Events '''
 
-client = MyClient()
-client.run('my token goes here')
+@bot.event
+async def on_ready():
+  await bot.change_presence(game=discord.Game(name='Reply with `>reply`'))
+  print("Good morning :)")
+
+@bot.event
+async def on_message(msg):
+  print('messaged')
+  print(msg)
+  await bot.process_commands(msg)
+
+
+''' Commands '''
+
+
+''' Helpers '''
+
+
+''' Run '''
+bot = commands.Bot(command_prefix='>')
+bot.run(os.environ['REPLY_BETA'])
 
