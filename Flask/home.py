@@ -2,16 +2,59 @@ from flask import Flask, g, session, redirect, request, url_for, jsonify, render
 from requests_oauthlib import OAuth2Session
 import globals
 import os
+import pandas as pd
 
 app = Flask(__name__)
 
+
 @app.route("/")
 def main():
-    return render_template('index.html', base_url = globals.base_url)
+    return render_template('index.html', base_url=globals.base_url)
+
 
 @app.route("/index")
 def base():
-	return render_template('index.html', base_url = globals.base_url)
+	return render_template('index.html', base_url=globals.base_url)
+
+
+@app.route("/course")
+def course():
+	return render_template('course.html', base_url=globals.base_url)
+
+
+@app.route("/assign_batch")
+def assign_batch():
+	return render_template('assign_batch.html', base_url=globals.base_url)
+
+
+@app.route("/assign_course")
+def assign_course():
+	return render_template('assign_course.html', base_url=globals.base_url)
+
+
+@app.route("/assign_rep")
+def assign_rep():
+	return render_template('assign_rep.html', base_url=globals.base_url)
+
+
+@app.route("/batch")
+def batch():
+	return render_template('batch.html', base_url=globals.base_url)
+
+
+@app.route("/invite")
+def invite():
+	return render_template('invite.html', base_url=globals.base_url)
+
+
+@app.route("/invite_submit", methods=['POST'])
+def invite_submit():
+    xls = request.form['file']
+    xl_file = pd.ExcelFile(xls)
+    dfs = pd.read_excel(xl_file, sheet_name=None)
+    print(dfs)
+        
+    
 
 
 OAUTH2_CLIENT_ID = globals.OAUTH2_CLIENT_ID
