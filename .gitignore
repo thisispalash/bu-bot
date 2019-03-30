@@ -1,3 +1,4 @@
 .DS_Store
 app-env
 inspire.py
+globals.py
