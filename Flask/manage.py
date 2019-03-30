@@ -12,7 +12,7 @@ def main():
     return render_template('index.html', base_url = globals.base_url)
 
 @app.route("/home")
-def home():
+def base():
 	return render_template('index.html', base_url = globals.base_url)
 
 if __name__ == "__main__":
