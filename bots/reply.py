@@ -3,7 +3,7 @@ import os, datetime
 import discord
 from discord.ext import commands
 
-from helper import STUD_FILE
+from .helper import STUD_FILE
 
 SERVER = {}
 

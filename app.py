@@ -1,11 +1,12 @@
 import os, json
 
-from flask import Flask, g, session, redirect, request, url_for, jsonify, render_template, flash
+from flask import render_template, flash
+from werkzeug.utils import secure_filename
+
+from flask import Flask, g, session, redirect, request, url_for, jsonify
+from requests_oauthlib import OAuth2Session
 
 import pandas as pd
-
-from requests_oauthlib import OAuth2Session
-from werkzeug.utils import secure_filename
 
 from helper import DATA_DIR, STUD_FILE, LOG_FILE, DEBUG
 
@@ -13,16 +14,19 @@ from helper import DATA_DIR, STUD_FILE, LOG_FILE, DEBUG
 BASE_URL = os.environ['URL']
 DISCORD_CLIENT_ID = os.environ['CLIENT_ID']
 DISCORD_CLIENT_SECRET = os.environ['CLIENT_SECRET']
-DISCORD_REDIRECT_URI = BASE_URL + '/logged'
+DISCORD_REDIRECT_URI = BASE_URL + '/callback'
+if 'http://' in DISCORD_REDIRECT_URI: os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = 'true'
 
 API_BASE_URL = 'https://discordapp.com/api'
 AUTHORIZATION_URL = API_BASE_URL + '/oauth2/authorize'
 TOKEN_URL = API_BASE_URL + '/oauth2/token'
 
+
 ALLOWED_EXTENSIONS = set(['xlsx'])
 
 MSGs = {
-    'error': 'Some error accured. Please try again!'
+    'error': 'Some error accured. Please try again!',
+    'success': 'That, somehow worked! Good on you mate!'
 }
 
 ''' app consts '''
@@ -171,8 +175,9 @@ def create_batch():
     return 'success !!!! HAHA !!!!'
 
 
-def token_updater(token):
-    session['oauth2_token'] = token
+''' Discord OAuth2 '''
+
+def token_updater(token): session['oauth2_token'] = token
 
 def make_session(token=None, state=None, scope=None):
     return OAuth2Session(
@@ -189,10 +194,8 @@ def make_session(token=None, state=None, scope=None):
         token_updater=token_updater)
 
 @app.route('/auth')
-def index():
-    scope = request.args.get(
-        'scope',
-        'identify email connections guilds guilds.join')
+def auth():
+    scope = request.args.get('scope','identify')
     discord = make_session(scope=scope.split(' '))
     authorization_url, state = discord.authorization_url(AUTHORIZATION_URL)
     session['oauth2_state'] = state
@@ -200,13 +203,13 @@ def index():
 
 @app.route('/callback')
 def callback():
-    if request.values.get('error'):
-        return request.values['error']
+    if request.values.get('error'): return request.values['error']
     discord = make_session(state=session.get('oauth2_state'))
     token = discord.fetch_token(
         TOKEN_URL,
         client_secret=DISCORD_CLIENT_SECRET,
-        authorization_response=request.url)
+        authorization_response=request.url
+    )
     session['oauth2_token'] = token
     return redirect(url_for('.me'))
 
@@ -216,14 +219,15 @@ def me():
     user = discord.get(API_BASE_URL + '/users/@me').json()
     guilds = discord.get(API_BASE_URL + '/users/@me/guilds').json()
     connections = discord.get(API_BASE_URL + '/users/@me/connections').json()
-    return jsonify(user=user, guilds=guilds, connections=connections)
+    return redirect(url_for('logged'))
+    # return jsonify(user=user, guilds=guilds, connections=connections)
 
 
 
 if __name__ == '__main__':
     # Start Bots
-    from bots import mgmt, reply
-    mgmt.bot.run(os.environ['BU_MGMT'])
-    reply.bot.run(os.environ['BUHACK_GIFT'])
+    # from bots import mgmt, reply
+    # mgmt.bot.run(os.environ['BU_MGMT'])
+    # reply.bot.run(os.environ['BUHACK_GIFT'])
     # Start server
-    app.run(host='0.0.0.0', port=int('5500'),debug = True)
+    app.run(host='127.0.0.1', port=int('5500'))

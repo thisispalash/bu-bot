@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 import asyncio
 
-from helper import STUD_FILE, CONFIG_FILE, LOG_FILE
+from .helper import STUD_FILE, CONFIG_FILE, LOG_FILE
 
 # TODO Shift to pymongo
 with open(CONFIG_FILE) as f: CONFIG = json.load(f)
