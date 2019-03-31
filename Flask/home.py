@@ -72,11 +72,29 @@ def invite_submit():
     dfs = pd.read_excel(xl_file, sheet_name=None)
 
     json_data = json.dumps({})
-    count = 0
-    for i in dfs.values():
-        json_data += json.dumps({"name": str(i["Name"][count]), "roll": str(i["Roll"][count]), "year": str(i["Year"][count]), "netID": "", "otp": "", "batch": str(i["Batch"][count]), "rep": str(i["Rep"][count]), "courses": "", "email": str(i["Email"][count]), "discord_uid": "", "nickname": "", "enrolled": "True"})
-        count += 1
+    name = []
+    roll = []
+    batch = []
+    email = []
+    rep = []
+    year = []
 
+    for i in dfs.values():
+        for j in i["Name"]:
+            print(name.append(j))
+        for k in i["Roll"]:
+            roll.append(k)
+        for l in i["Batch"]:
+            batch.append(l)
+        for m in i["Email"]:
+            email.append(m)
+        for n in i["Rep"]:
+            rep.append(n)
+        for n in i["Year"]:
+            year.append(n)
+    
+    for i in range(len(name)):
+        json_data += json.dumps({"name": name[i], "roll": roll[i], "year": year[i], "netID": "", "otp": "", "batch": batch[i], "rep": rep[i], "courses": "", "email": email[i], "discord_uid": "", "nickname": "", "enrolled": "True"})
 
     print(json_data)
 
