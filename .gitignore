@@ -2,5 +2,3 @@
 app-env
 data
 *.pyc
-globals.py
-*.xlsx

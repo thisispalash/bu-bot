@@ -1,4 +1,5 @@
 import os, json
+import asyncio
 
 from flask import render_template, flash
 from werkzeug.utils import secure_filename
@@ -9,6 +10,8 @@ from requests_oauthlib import OAuth2Session
 import pandas as pd
 
 from helper import DATA_DIR, STUD_FILE, LOG_FILE, DEBUG
+from bots.mgmt import run_command as mgmt_bot
+from bots.reply import run_command as reply_bot
 
 ''' Constants '''
 BASE_URL = os.environ['URL']
@@ -26,7 +29,10 @@ ALLOWED_EXTENSIONS = set(['xlsx'])
 
 MSGs = {
     'error': 'Some error accured. Please try again!',
-    'success': 'That, somehow worked! Good on you mate!'
+    'success': 'That, somehow worked! Good on you mate!',
+    'invite': 'Only xlsx files are allowed. The students will be invited to join the server',
+    'add': 'add a new channel to the Server',
+    'assign': 'assign a role to someone'
 }
 
 ''' app consts '''
@@ -37,15 +43,16 @@ app.config['DATA_FILE'] = STUD_FILE
 app.config['SECRET_KEY'] = DISCORD_CLIENT_SECRET
 
 
-def allowed_file(filename): return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
 ''' Routes '''
 
 @app.route('/')
-def main(): return render_template('index.html', base_url=BASE_URL)
+def main(): 
+    if session.get('oauth2_token'): return redirect(url_for('logged'))
+    return render_template('index.html', base_url=BASE_URL)
 @app.route('/index')
-def base(): return render_template('index.html', base_url=BASE_URL)
+def base():
+    if session.get('oauth2_token'): return redirect(url_for('logged'))
+    return render_template('index.html', base_url=BASE_URL)
 
 @app.route('/logged')
 def logged(): return render_template('logged.html', base_url=BASE_URL)
@@ -80,42 +87,33 @@ def invite(msg):
 def invite_submit():
     if request.method == 'POST':
         f = request.files['file']
-    if '.xlsx' not in f.filename or '.xls' not in f.filename:
-        return 'Invalid file uploaded'
-    count = len(os.listdir(app.config['DATA_DIR']))
-    f.save(os.path.join(app.config['DATA_DIR'], str(count)+'.xlsx'))
-    xl_file = pd.ExcelFile(app.config['DATA_DIR']+'/{}.xlsx'.format(count))
-    dfs = pd.read_excel(xl_file, sheet_name=None)
-
-    json_data = json.dumps({})
-    name = []
-    roll = []
-    batch = []
-    email = []
-    rep = []
-    year = []
-
-    for i in dfs.values():
-        for j in i['Name']:
-            print(name.append(j))
-        for k in i['Roll']:
-            roll.append(k)
-        for l in i['Batch']:
-            batch.append(l)
-        for m in i['Email']:
-            email.append(m)
-        for n in i['Rep']:
-            rep.append(n)
-        for n in i['Year']:
-            year.append(n)
-    
+    if '.xlsx' not in f.filename or '.xls' not in f.filename: return redirect(url_for('invite/error'))
+    df = pd.read_excel(f.filename,engine='xlrd' )
+    data = []
+    name,roll,batch,netID,rep,year = df['Name'],df['Roll'],df['Batch'],df['NetID'],df['Rep'],df['Year']
     for i in range(len(name)):
-        json_data += json.dumps({'name': name[i], 'roll': roll[i], 'year': year[i], 'netID': '', 'otp': '', 'batch': batch[i], 'rep': rep[i], 'courses': '', 'email': email[i], 'discord_uid': '', 'nickname': '', 'enrolled': 'True'})
+        data.append({
+            'name': name[i], 
+            'roll': roll[i], 
+            'year': int(year[i]), 
+            'netID': netID[i], 
+            'otp': '', 
+            'batch': int(batch[i]), 
+            'rep': rep[i], 
+            'courses': {
+                'past': [],
+                'current': []
+            },
+            'discord_uid': '', 
+            'nickname': '', 
+            'enrolled': True
+        })
+    with open(STUD_FILE,'w') as f: json.dump(data,f)
+    sent = mgmt_bot('add_to_server') # ERROR: No async-await in flask
+    if sent: return redirect(url_for('invite', msg='success'))
+    return redirect(url_for('invite', msg='error'))
 
-    print(json_data)
-
-    return 'file uploaded successfully'
-
+# TODO
 @app.route('/create_course', methods=['POST'])
 def create_course():
     channel_name = request.form['channel_name']
@@ -123,6 +121,7 @@ def create_course():
     print('create course is called')
     return 'Channel Created for {} - {} '.format(channel_name, channel_id)
 
+# TODO
 @app.route('/assign_students', methods=['POST'])
 def assign_students_course():
     if request.method == 'POST':
@@ -138,6 +137,7 @@ def assign_students_course():
 
     return 'file uploaded successfully'
 
+# TODO
 @app.route('/assign_students_batch', methods=['POST'])
 def assign_students_batch():
     if request.method == 'POST':
@@ -153,6 +153,7 @@ def assign_students_batch():
 
     return 'file uploaded successfully'
 
+# TODO
 @app.route('/assign_student_rep', methods=['POST'])
 def assign_students_rep():
     if request.method == 'POST':
@@ -168,6 +169,7 @@ def assign_students_rep():
 
     return 'file uploaded successfully'
 
+# TODO
 @app.route('/create_batch', methods=['POST'])
 def create_batch():
     batch = request.form['batch']
@@ -220,7 +222,6 @@ def me():
     guilds = discord.get(API_BASE_URL + '/users/@me/guilds').json()
     connections = discord.get(API_BASE_URL + '/users/@me/connections').json()
     return redirect(url_for('logged'))
-    # return jsonify(user=user, guilds=guilds, connections=connections)
 
 
 

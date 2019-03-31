@@ -16,6 +16,7 @@ with open(STUD_FILE) as f: DATA = json.load(f)
 PREFIX = ';'
 SERVER_NAME = CONFIG['guild']
 WELCOME_CHANNEL = None
+PERSONAL = None
 # NO_PERMS = discord.Permissions.none()
 # ALL_PERMS = discord.Permissions.all()
 
@@ -34,19 +35,19 @@ async def on_ready():
     type = discord.ActivityType.watching,
     name = 'your every move'
   ); await bot.change_presence(activity=activity)
-  
+  pm = None
   for guild in bot.guilds:
     if guild.name == SERVER_NAME:
       only_bot = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False)
-      }; pm = None
+      }
       for channel in guild.channels:
         if channel.name == 'welcome': WELCOME_CHANNEL = channel.id
         if channel.name == 'bot-chan': pm = channel
       if not pm: pm = await guild.create_text_channel('bot-chan',overwrites=only_bot)
       if not pm.topic: pm.topic = 'Channel for BU_MGMT to manage the server. Use the webapp to manipulate bot or type ;help for list of commands'
       await pm.send('The time of bots is now!')
-
+  PERSONAL = pm
   print('Beep boop, boop beep!')
 
 @bot.event
@@ -111,7 +112,7 @@ async def on_member_join(mem):
 
 @bot.event
 async def on_message(msg):
-  if msg.author != bot.user: pass
+  if msg.author != bot.user: return
   global LOG_FILE
   log = '[' + str(datetime.datetime.now()) + '] ' + msg.clean_content 
   with open(LOG_FILE,'a') as f: f.write(log)
@@ -157,7 +158,14 @@ def generate_otp(netID):
   OTPs.append(otp)
   return otp
 
-
+async def run_command(command):
+  global PERSONAL
+  if not os.environ.get('BU_MGMT'): exit('token not found')
+  bot.run(os.environ['BU_MGMT'])
+  if command not in bot.commands: return False
+  await PERSONAL.send(';'+command)
+  # await bot.logout()
+  return True
 
 if __name__ == '__main__':
   if not os.environ.get('BU_MGMT'): exit('token not found')

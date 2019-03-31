@@ -21,7 +21,6 @@ usage = {
 
 @bot.event
 async def on_ready():
-  print(bot)
   act = discord.Activity()
   act.type = discord.ActivityType.watching
   act.name = 'your messages'
@@ -96,6 +95,14 @@ def create_embed(reply_to, reply):
   em.set_footer(text='Click the links to jump to the messages')
   return em
 
+async def run_command(command):
+  if not os.environ.get('BU_MGMT'): exit('token not found')
+  bot.run(os.environ['BU_MGMT'])
+  if command not in bot.commands: return False
+
+  await bot.logout()
+  return True
+  
 if __name__=='__main__':
   if not os.environ.get('BUHACK_GIFT'): exit('token not found')
   bot.run(os.environ['BUHACK_GIFT'])
