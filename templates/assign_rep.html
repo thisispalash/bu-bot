@@ -1,3 +1,4 @@
+{% extends "message_box.html" %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -15,17 +16,15 @@
         <h1>BU-MGMT</h1>
     </div>
     <div class="card">
-        <h2> create Course </h2>
-        <form action="create_course" method="post">
-            <h3>Course Name</h3>
-            <input type="text" name="channel_name" id="name">
-            <h3>Course ID</h3>
-            <input type="text" name="channel_id" id="id">
+        <h2> assign representative </h2>
+        <form action="assign_student_rep" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" id="xls">
             <br>
             <input type="submit" value="submit">
         </form>
     </div>
+    {{ super() }}
 </body>
-<script src="../static/js/"></script>
+
 
 </html>

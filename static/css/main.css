@@ -94,3 +94,7 @@ input:hover{
 .card li ul{
     display: none;
 }
+
+a {
+    text-decoration: none;
+}
