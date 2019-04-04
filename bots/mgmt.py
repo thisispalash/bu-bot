@@ -6,6 +6,8 @@ import discord
 from discord.ext import commands
 import asyncio
 
+import pymongo
+
 from .helper import STUD_FILE, CONFIG_FILE, LOG_FILE
 
 # TODO Shift to pymongo
