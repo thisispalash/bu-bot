@@ -10,8 +10,8 @@ from requests_oauthlib import OAuth2Session
 import pandas as pd
 
 from helper import DATA_DIR, STUD_FILE, LOG_FILE, DEBUG
-from bots.mgmt import run_command as mgmt_bot
-from bots.reply import run_command as reply_bot
+# from bots.mgmt import run_command as mgmt_bot
+# from bots.reply import run_command as reply_bot
 
 ''' Constants '''
 BASE_URL = os.environ['URL']
@@ -47,11 +47,11 @@ app.config['SECRET_KEY'] = DISCORD_CLIENT_SECRET
 
 @app.route('/')
 def main(): 
-    if session.get('oauth2_token'): return redirect(url_for('logged'))
+    # if session.get('oauth2_token'): return redirect(url_for('logged'))
     return render_template('index.html', base_url=BASE_URL)
 @app.route('/index')
 def base():
-    if session.get('oauth2_token'): return redirect(url_for('logged'))
+    # if session.get('oauth2_token'): return redirect(url_for('logged'))
     return render_template('index.html', base_url=BASE_URL)
 
 @app.route('/logged')
@@ -231,4 +231,5 @@ if __name__ == '__main__':
     # mgmt.bot.run(os.environ['BU_MGMT'])
     # reply.bot.run(os.environ['BUHACK_GIFT'])
     # Start server
-    app.run(host='127.0.0.1', port=int('5500'))
+    session.clear()
+    app.run(host='127.0.0.1', port=int('5000'))
